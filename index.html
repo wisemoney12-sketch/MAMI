@@ -1,14 +1,6 @@
 <!doctype html><html lang="en-ZA"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MAMI</title><meta name="theme-color" content="#3D1B4C">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MAMI">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>MAMI</title><meta name="theme-color" content="#3D1B4C"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font-sans);font-size:13px;color:var(--text-primary);overflow-x:hidden}
@@ -78,9 +70,11 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--text-primary);overf
 .mrow{display:flex;flex-direction:column;gap:7px}
 .mrow input{width:100%;font-size:14px;padding:8px 9px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary)}
 .mrow input:focus{outline:none;border-color:var(--rose)}
-.mflags{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:2px}
-@media(min-width:480px){.mrow{flex-direction:row;align-items:center}.mrow input{flex:1;flex-basis:220px}.mflags{margin-top:0}}
-.mfl{font-size:10px;font-weight:500;padding:3px 6px;border-radius:20px;text-align:center;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* MOBILE FOOD TAG FIX — every classification remains readable on small screens */
+.mflags{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;margin-top:8px}
+.mfl{font-size:10px;font-weight:600;line-height:1.2;padding:6px 5px;border-radius:14px;text-align:center;transition:all .15s;white-space:normal;overflow-wrap:anywhere;min-width:0;width:100%}
+@media(max-width:380px){.mflags{grid-template-columns:repeat(2,minmax(0,1fr))}.mfl{font-size:9px;padding:6px 4px}}
+@media(min-width:480px){.mrow{flex-direction:row;align-items:center}.mrow input{flex:1}.mflags{display:flex;flex-wrap:wrap;width:auto;margin-top:0}.mfl{width:auto;min-width:52px;white-space:nowrap;padding:3px 8px}}
 .mf-blank{background:var(--surface-0);color:var(--text-muted)}
 .mf-y{background:#FFCDD2;color:#B71C1C}.mf-n{background:#C8E6C9;color:#1B5E20}
 .mf-up{background:#FFCDD2;color:#B71C1C}.mf-p{background:#FFE0B2;color:#BF360C}.mf-c{background:#C8E6C9;color:#1B5E20}
@@ -208,7 +202,7 @@ body{background:radial-gradient(circle at top right,#F4EAF1 0,transparent 30%),v
 <div class="vw" id="v-food">
   <div class="card"><div class="ct rose"><i class="ti ti-salad" aria-hidden="true"></i>Food log</div>
     <div class="f" style="max-width:220px;margin-bottom:12px"><label>Recording date</label><div id="fdate-display" style="font-size:14px;padding:8px 9px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface-1)">—</div></div>
-    <div class="slbl">Meals — dairy / sugar / processed / gluten / histamine flags update as you type</div>
+    <div class="slbl">Meals — dairy / sugar / processed flags update as you type</div>
     <div id="mealrows"></div>
     <div class="slbl">Extras</div>
     <div class="fg">
@@ -404,7 +398,6 @@ function exportExcel(){
   const foodRows=[foodHeaders,...S.foods.map(f=>[f.date??'',f.bFood??'',f.lFood??'',f.dFood??'',f.sFood??'',f.restaurant??'',f.leftovers??'',f.newFood??'',f.desc??'',f.foodLoad??''])];
   const timingHeaders=['Date','Migraine time','Migraine trigger','Sinus time','Sinus trigger','Acne time','Acne trigger','Migraine lag','Sinus lag','Acne lag','Pattern notes'];
   const timingRows=[timingHeaders,...S.timing.map(t=>[t.date??'',t.migraineTime??'',t.migraineTrigger??'',t.sinusTime??'',t.sinusTrigger??'',t.acneTime??'',t.acneTrigger??'',t.mLag??'',t.sLag??'',t.aLag??'',t.notes??''])];
-  const triggerRows=buildTriggerFoodRows();
   const workbook=`<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -415,7 +408,6 @@ function exportExcel(){
 ${sheetXML('Day Log',dayRows)}
 ${sheetXML('Food Log',foodRows)}
 ${sheetXML('Timing',timingRows)}
-${sheetXML('Trigger Foods',triggerRows)}
 </Workbook>`;
   const blob=new Blob([workbook],{type:'application/vnd.ms-excel'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
@@ -423,63 +415,11 @@ ${sheetXML('Trigger Foods',triggerRows)}
   setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Excel exported ✓');
 }
 
-function collectTriggerFoodMaps(){
-  const maps=TRIGGER_COLUMNS.map(()=>new Map());
-  const addTok=(idx,tok,date)=>{
-    tok=(tok||'').trim();if(!tok)return;
-    const m=maps[idx],e=m.get(tok)||{count:0,dates:new Set()};
-    e.count++;if(date)e.dates.add(date);m.set(tok,e);
-  };
-  S.foods.forEach(f=>{
-    const tokens=dayFoodTokens(f);
-    tokens.forEach(tok=>{TRIGGER_COLUMNS.forEach((c,i)=>{if(kwm(tok,c.kw))addTok(i,tok,f.date);});});
-    if(f.flags){
-      TRIGGER_COLUMNS.forEach((c,i)=>{
-        if(!c.aiKey)return;
-        const val=f.flags[c.aiKey];
-        if(val&&typeof val==='string')tokenizeMeal(val).forEach(tok=>addTok(i,tok,f.date));
-      });
-    }
-  });
-  return maps;
-}
-function buildTriggerFoodRows(){
-  const maps=collectTriggerFoodMaps();
-  const cols=maps.map(m=>{
-    const arr=[...m.entries()].map(([tok,e])=>({tok,count:e.count}));
-    arr.sort((a,b)=>b.count-a.count||a.tok.localeCompare(b.tok));
-    return arr.map(a=>a.count>1?`${a.tok} (${a.count}×)`:a.tok);
-  });
-  const header=TRIGGER_COLUMNS.map(c=>c.label);
-  const maxRows=Math.max(0,...cols.map(c=>c.length));
-  const rows=[header];
-  if(maxRows===0){
-    rows.push(header.map(()=>'No foods logged yet'));
-  }else{
-    for(let r=0;r<maxRows;r++)rows.push(cols.map(c=>c[r]||''));
-  }
-  return rows;
-}
-
 /* ── FOOD LISTS (verified 100% accurate) ──────────────────────────────── */
 const KD=['milk','melk','cheese','kaas','yoghurt','yogurt','cream','room','butter','botter','ghee','kefir','ice cream','roomys','custard','vla','whey','lactose','parmesan','cheddar','mozzarella','brie','feta','gouda','sour cream','suurroom','buttermilk','karringmelk','latte','cappuccino','flat white','milkshake','amasi','maas','maaskaas','inkomazi','cream cheese','cottage cheese','ricotta','halloumi','dairy milk','cadbury','milk chocolate','hot chocolate','drinking chocolate','magnum','cornetto','cremora','coffee creamer','clover','condensed milk'];
 const KS=['sugar','suiker','syrup','stroop','honey','heuning','jam','konfyt','chocolate','sjokolade','candy','soet','cake','koek','biscuit','koekie','cookie','muffin','doughnut','donut','cooldrink','koeldrank','cold drink','soda','coke','cola','coca-cola','pepsi','fanta','sprite','cream soda','lemonade','energy drink','red bull','monster','score','power horse','orange juice','fruit juice','apple juice','grape juice','mango juice','juice','smoothie','cereal','granola','dessert','pudding','sweets','lekkergoed','caramel','white bread','witbrood','white rice','toffee','nougat','rusks','beskuit','koeksisters','melktert','milk tart','peppermint crisp','scone','croissant','pastry','danish','pronutro','coco pops','rice krispies','corn flakes','frosties','nutella','icing','fruit roll','marshmallow','astros','smarties','kit kat','bar one','lunch bar','cadbury','dairy milk','ice cream','magnum','cornetto','powerade','gatorade','oros'];
 const KU=['coke','cola','coca-cola','pepsi','fanta','sprite','cream soda','lemonade','energy drink','red bull','monster','score','power horse','cooldrink','cold drink','koeldrank','soda','fizzy','powerade','gatorade','lucozade','oros','squash','kool-aid','orange juice','fruit juice','apple juice','grape juice','mango juice','pineapple juice','guava juice','cranberry juice','smoothie','juice','chocolate bar','sjokolade','cadbury','dairy milk','beacon','bar one','lunch bar','kit kat','crunchie','top deck','astros','smarties','chappies','marshmallow','nougat','toffee','fruit roll','liquorice','ice cream','roomys','magnum','cornetto','soft serve','ice lolly','frozen yoghurt','gelato','chips','crisps','lays','simba','doritos','pringles','niknaks','cheetahs','twistos','pronutro','coco pops','rice krispies','froot loops','frosties','cocoa puffs','kfc','mcdonalds','burger king','nandos','steers','debonairs','chicken licken','wimpy','spur','fishaways','pizza hut','hungry lion','instant noodle','2-minute noodle','two minute noodle','maggi','cup noodle','pot noodle','indomie','frozen pizza','pizza','microwave meal','ready meal','nugget','chicken nugget','fish finger','hot dog','frankfurter','vienna','viennas','polony','luncheon meat','spam','mayonnaise','mayo','salad dressing','tomato sauce','ketchup','heinz','bbq sauce','sweet chilli','ranch dressing','energy bar','protein bar','granola bar','nutri-grain','margarine','rama','flora','stork','processed cheese','kraft singles','scone','shop scone','croissant','danish','chelsea bun','cream puff','eclair','doughnut','donut','instant soup','cup a soup','royco','frozen meal'];
 const KP=['bread','brood','toast','rye bread','sourdough','whole wheat bread','brown bread','wholewheat','pita','naan','roti','tortilla','flatbread','chapati','pasta','spaghetti','macaroni','penne','fettuccine','lasagne','noodle','bacon','spek','ham','salami','wors','boerewors','droewors','biltong','sausage','chorizo','bratwurst','smoked salmon','smoked fish','tinned tuna','canned tuna','canned fish','tinned sardines','tinned','canned','jarred','pickled','preserved','pap','mieliepap','maize','mealie','sadza','ugali','fufu','bogobe','ting','samp','umngqusho','injera','umvubo','uphuthu','umfino','oats','oatmeal','muesli','vinegar','stock cube','bouillon','soy sauce','fish sauce','miso','tahini','hummus','pesto','tomato paste','cake','koek','muffin','biscuit','koekie','beskuit','rusks','braaibroodjie','vetkoek','pizza base','butter','botter','cream','room','oil','olive oil','wheat','koring','flour','meel','yoghurt','yogurt','kefir','cheese','kaas'];
-const KG=['bread','brood','toast','rye bread','sourdough','whole wheat bread','brown bread','wholewheat','white bread','witbrood','pita','naan','roti','tortilla','flatbread','chapati','pasta','spaghetti','macaroni','penne','fettuccine','lasagne','noodle','instant noodle','2-minute noodle','two minute noodle','maggi','indomie','wheat','koring','flour','meel','cake','koek','muffin','biscuit','koekie','cookie','rusks','beskuit','koeksisters','vetkoek','braaibroodjie','melktert','milk tart','scone','croissant','pastry','danish','chelsea bun','cream puff','eclair','doughnut','donut','pizza','pizza base','pizza hut','beer','bier','malt','barley','rye','semolina','couscous','cereal','granola','coco pops','rice krispies','corn flakes','frosties','froot loops','pronutro','battered','breaded','crumbed','fish finger','chicken nugget','nugget','soy sauce','stock cube','bouillon','gravy powder','custard powder','vla'];
-const KH=['cheese','kaas','parmesan','cheddar','mozzarella','brie','feta','gouda','yoghurt','yogurt','kefir','amasi','maas','maaskaas','inkomazi','sour cream','suurroom','buttermilk','karringmelk','wine','wyn','red wine','white wine','beer','bier','champagne','sherry','vinegar','pickled','pickle','sauerkraut','kombucha','soy sauce','miso','fish sauce','salami','ham','bacon','spek','biltong','droewors','boerewors','wors','sausage','chorizo','vienna','viennas','polony','luncheon meat','smoked salmon','smoked fish','tinned tuna','canned tuna','canned fish','tinned sardines','tinned','canned','anchovy','anchovies','shellfish','prawns','shrimp','spinach','tomato','tamatie','avocado','avo','eggplant','brinjal','citrus','orange','lemon','lime','grapefruit','strawberry','strawberries','chocolate','sjokolade','cocoa','nuts','peanuts','cashews','walnuts','leftovers','leftover','processed meat','cured meat','yeast extract','marmite','bovril','stock cube','bouillon'];
-const KA=['wine','wyn','red wine','white wine','beer','bier','champagne','sherry','whisky','whiskey','vodka','brandy','gin','rum','cider','liqueur','cocktail','savanna','hunters','castle lager','black label','amstel'];
-const KO6=['sunflower oil','vegetable oil','canola oil','margarine','rama','flora','stork','fried','deep fried','mayonnaise','mayo','salad dressing','peanuts','crisps','chips'];
-const TRIGGER_COLUMNS=[
-  {label:'Dairy',kw:KD,aiKey:'dairyFoods'},
-  {label:'Sugar',kw:KS,aiKey:'sugarFoods'},
-  {label:'Gluten',kw:KG,aiKey:'glutenFoods'},
-  {label:'Histamine',kw:KH,aiKey:'histamineFoods'},
-  {label:'Alcohol',kw:KA,aiKey:null},
-  {label:'Omega-6',kw:KO6,aiKey:null},
-  {label:'Ultra-processed',kw:KU,aiKey:null},
-  {label:'Processed',kw:KP,aiKey:null}
-];
 function kwm(t,l){if(!t)return false;const low=t.toLowerCase();return l.some(k=>low.includes(k));}
 function procLevel(t){if(!t||!t.trim())return null;if(kwm(t,KU))return'Ultra-processed';if(kwm(t,KP))return'Processed';return'Clean';}
 
@@ -510,8 +450,8 @@ function clrLog(){SYMS.forEach(s=>{const e=$(s.id);if(e){e.value=0;uv(s.id+'v','
 
 /* ── MEAL ROWS ────────────────────────────────────────────────────────── */
 const MEALS=[{name:'Breakfast',icon:'ti-eggs',key:'b'},{name:'Lunch',icon:'ti-bowl-chopsticks',key:'l'},{name:'Dinner',icon:'ti-meat',key:'n'},{name:'Snacks',icon:'ti-apple',key:'s'}];
-function buildMealRows(){const el=$('mealrows');if(!el)return;el.innerHTML=MEALS.map(m=>`<div class="mblock"><div class="mname"><i class="ti ${m.icon}" aria-hidden="true"></i>${m.name}</div><div class="mrow"><input type="text" id="mf-${m.key}" placeholder="type foods eaten..." oninput="uf('${m.key}')"><div class="mflags"><span class="mfl mf-blank" id="fd-${m.key}">—</span><span class="mfl mf-blank" id="fs-${m.key}">—</span><span class="mfl mf-blank" id="fg-${m.key}">—</span><span class="mfl mf-blank" id="fh-${m.key}">—</span><span class="mfl mf-blank" id="fp-${m.key}">—</span><span class="mfl mf-blank" id="fl-${m.key}">—</span></div></div></div>`).join('');}
-function uf(key){const t=$('mf-'+key)?.value||'';const e=!t.trim();const d=kwm(t,KD),s=kwm(t,KS),g=kwm(t,KG),h=kwm(t,KH),l=procLevel(t);const set=(id,txt,cls)=>{const x=$(id);if(x){x.textContent=txt;x.className='mfl '+cls;}};set('fd-'+key,e?'—':d?'Dairy':'No dairy',e?'mf-blank':d?'mf-y':'mf-n');set('fs-'+key,e?'—':s?'Sugar':'No sugar',e?'mf-blank':s?'mf-y':'mf-n');set('fg-'+key,e?'—':g?'Gluten':'No gluten',e?'mf-blank':g?'mf-y':'mf-n');set('fh-'+key,e?'—':h?'Histamine':'Low hist.',e?'mf-blank':h?'mf-y':'mf-n');set('fp-'+key,e?'—':l==='Ultra-processed'?'UP':l==='Processed'?'Proc':'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');set('fl-'+key,e?'—':l||'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');}
+function buildMealRows(){const el=$('mealrows');if(!el)return;el.innerHTML=MEALS.map(m=>`<div class="mblock"><div class="mname"><i class="ti ${m.icon}" aria-hidden="true"></i>${m.name}</div><div class="mrow"><input type="text" id="mf-${m.key}" placeholder="type foods eaten..." oninput="uf('${m.key}')"><div class="mflags"><span class="mfl mf-blank" id="fd-${m.key}">—</span><span class="mfl mf-blank" id="fs-${m.key}">—</span><span class="mfl mf-blank" id="fp-${m.key}">—</span><span class="mfl mf-blank" id="fl-${m.key}">—</span></div></div></div>`).join('');}
+function uf(key){const t=$('mf-'+key)?.value||'';const e=!t.trim();const d=kwm(t,KD),s=kwm(t,KS),l=procLevel(t);const set=(id,txt,cls)=>{const x=$(id);if(x){x.textContent=txt;x.className='mfl '+cls;}};set('fd-'+key,e?'—':d?'Dairy':'No dairy',e?'mf-blank':d?'mf-y':'mf-n');set('fs-'+key,e?'—':s?'Sugar':'No sugar',e?'mf-blank':s?'mf-y':'mf-n');set('fp-'+key,e?'—':l==='Ultra-processed'?'UP':l==='Processed'?'Proc':'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');set('fl-'+key,e?'—':l||'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');}
 
 /* ── AI CLASSIFIER — uses sendPrompt to go through Claude chat ─────────── */
 let lastFlags=null;
@@ -572,13 +512,11 @@ async function aiClass(){
         <div id="local-result"></div>`;
       const all=q;
       const lvl=procLevel(all);
-      const d=kwm(all,KD),s=kwm(all,KS),g=kwm(all,KG),h=kwm(all,KH);
+      const d=kwm(all,KD),s=kwm(all,KS);
       const lf=$('local-result');
       if(lf)lf.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:3px">
         ${d?'<span class="tag ty">Dairy detected</span>':'<span class="tag tn">No dairy</span>'}
         ${s?'<span class="tag ty">Sugar detected</span>':'<span class="tag tn">Low sugar</span>'}
-        ${g?'<span class="tag ty">Gluten detected</span>':'<span class="tag tn">Gluten-free</span>'}
-        ${h?'<span class="tag ty">Histamine detected</span>':'<span class="tag tn">Low histamine</span>'}
         <span class="tag ${lvl==='Ultra-processed'?'ty':lvl==='Processed'?'tw':'tn'}">${lvl}</span>
         </div><div style="font-size:11px;color:var(--text-muted);margin-top:6px">For full AI analysis, use the desktop Claude app.</div>`;
     }
@@ -596,7 +534,7 @@ async function applyAi(){
 function readFood(){return{date:recordDate,bFood:$('mf-b')?.value||'',lFood:$('mf-l')?.value||'',dFood:$('mf-n')?.value||'',sFood:$('mf-s')?.value||'',restaurant:$('exr')?.value||'N',leftovers:$('exl')?.value||'N',newFood:$('exn')?.value||'N',desc:$('exd')?.value||''};}
 async function saveFood(){
   const f=readFood();if(!f.date){toast('Select a date first',false);return;}
-  if(!f.flags){const all=[f.bFood,f.lFood,f.dFood,f.sFood,f.desc].join(' ');const lvl=procLevel(all);f.flags={dairy:kwm(all,KD),sugar:kwm(all,KS),gluten:kwm(all,KG),histamine:kwm(all,KH),ultraProcessed:lvl==='Ultra-processed',processed:lvl==='Processed',alcohol:kwm(all,KA),restaurant:f.restaurant==='Y',omega6:kwm(all,KO6),migraineRisk:kwm(all,KH)||kwm(all,['chocolate','sjokolade','caffeine','coffee','cheese']),sinusRisk:kwm(all,KD)||kwm(all,KS),acneRisk:kwm(all,KS)||kwm(all,KD)};f.foodLoad=0;}
+  if(!f.flags){const all=[f.bFood,f.lFood,f.dFood,f.sFood,f.desc].join(' ');const lvl=procLevel(all);f.flags={dairy:kwm(all,KD),sugar:kwm(all,KS),ultraProcessed:lvl==='Ultra-processed',processed:lvl==='Processed',histamine:false,alcohol:false,restaurant:f.restaurant==='Y',omega6:false,migraineRisk:false,sinusRisk:false,acneRisk:false,gluten:false};f.foodLoad=0;}
   const i=S.foods.findIndex(x=>x.date===f.date);if(i>=0)S.foods[i]=f;else S.foods.push(f);
   await persist();toast('Food log saved!');render();
 }
