@@ -23,7 +23,7 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--text-primary);overf
 .nt{flex:0 0 auto;min-width:60px;padding:8px 8px 7px;font-size:10px;font-weight:500;color:rgba(255,255,255,.7);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap;touch-action:manipulation}
 .nt i{font-size:15px}.nt.on{color:#fff;border-bottom-color:#fff}
 .sbar{font-size:11px;padding:5px 12px;text-align:center;background:var(--surface-1);color:var(--text-muted);border-bottom:0.5px solid var(--border)}
-.sbar.ok{background:var(--sage-l);color:var(--sage-d)}.sbar.err{background:var(--rose-l);color:var(--rose-d)}
+.sbar.ok{background:var(--sage-l);color:var(--sage-d)}.sbar.err{background:var(--rose-l);color:var(--rose-d)}.sbar.offline{background:var(--amber-l);color:#7A4A00}.sbar.update{background:var(--plum-l);color:var(--plum-d)}
 .vw{display:none;padding:12px 12px 32px;animation:fi .16s ease}.vw.on{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:24px;font-size:13px;font-weight:500;color:#fff;background:var(--rose);z-index:999;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:tin .2s ease}
@@ -415,9 +415,13 @@ ${sheetXML('Timing',timingRows)}
   setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Excel exported ✓');
 }
 
-/* ── FOOD LISTS (verified 100% accurate) ──────────────────────────────── */
+/* ── FOOD CLASSIFICATION RULES — heuristic screening, not a diagnosis ─── */
 const KD=['milk','melk','cheese','kaas','yoghurt','yogurt','cream','room','butter','botter','ghee','kefir','ice cream','roomys','custard','vla','whey','lactose','parmesan','cheddar','mozzarella','brie','feta','gouda','sour cream','suurroom','buttermilk','karringmelk','latte','cappuccino','flat white','milkshake','amasi','maas','maaskaas','inkomazi','cream cheese','cottage cheese','ricotta','halloumi','dairy milk','cadbury','milk chocolate','hot chocolate','drinking chocolate','magnum','cornetto','cremora','coffee creamer','clover','condensed milk'];
 const KS=['sugar','suiker','syrup','stroop','honey','heuning','jam','konfyt','chocolate','sjokolade','candy','soet','cake','koek','biscuit','koekie','cookie','muffin','doughnut','donut','cooldrink','koeldrank','cold drink','soda','coke','cola','coca-cola','pepsi','fanta','sprite','cream soda','lemonade','energy drink','red bull','monster','score','power horse','orange juice','fruit juice','apple juice','grape juice','mango juice','juice','smoothie','cereal','granola','dessert','pudding','sweets','lekkergoed','caramel','white bread','witbrood','white rice','toffee','nougat','rusks','beskuit','koeksisters','melktert','milk tart','peppermint crisp','scone','croissant','pastry','danish','pronutro','coco pops','rice krispies','corn flakes','frosties','nutella','icing','fruit roll','marshmallow','astros','smarties','kit kat','bar one','lunch bar','cadbury','dairy milk','ice cream','magnum','cornetto','powerade','gatorade','oros'];
+const KG=['wheat','koring','flour','meel','bread','brood','toast','pasta','spaghetti','macaroni','noodle','noodles','pizza','pizza base','naan','pita','roti','chapati','cake','koek','biscuit','koekie','cookie','muffin','croissant','pastry','danish','scone','rusks','beskuit','cereal','couscous','barley','rye','seitan','bulgur'];
+// Histamine is context-sensitive: freshness, fermentation and individual tolerance matter.
+// These terms indicate a potential higher-histamine or histamine-related food, not certainty.
+const KH=['aged cheese','parmesan','cheddar','gouda','brie','blue cheese','salami','ham','bacon','sausage','boerewors','biltong','droewors','smoked fish','smoked salmon','tinned tuna','canned tuna','tinned sardines','canned fish','pickled','vinegar','soy sauce','fish sauce','miso','kefir','yoghurt','yogurt','amasi','maas','wine','beer','alcohol','tomato','spinach','aubergine','eggplant','avocado','sauerkraut','kimchi'];
 const KU=['coke','cola','coca-cola','pepsi','fanta','sprite','cream soda','lemonade','energy drink','red bull','monster','score','power horse','cooldrink','cold drink','koeldrank','soda','fizzy','powerade','gatorade','lucozade','oros','squash','kool-aid','orange juice','fruit juice','apple juice','grape juice','mango juice','pineapple juice','guava juice','cranberry juice','smoothie','juice','chocolate bar','sjokolade','cadbury','dairy milk','beacon','bar one','lunch bar','kit kat','crunchie','top deck','astros','smarties','chappies','marshmallow','nougat','toffee','fruit roll','liquorice','ice cream','roomys','magnum','cornetto','soft serve','ice lolly','frozen yoghurt','gelato','chips','crisps','lays','simba','doritos','pringles','niknaks','cheetahs','twistos','pronutro','coco pops','rice krispies','froot loops','frosties','cocoa puffs','kfc','mcdonalds','burger king','nandos','steers','debonairs','chicken licken','wimpy','spur','fishaways','pizza hut','hungry lion','instant noodle','2-minute noodle','two minute noodle','maggi','cup noodle','pot noodle','indomie','frozen pizza','pizza','microwave meal','ready meal','nugget','chicken nugget','fish finger','hot dog','frankfurter','vienna','viennas','polony','luncheon meat','spam','mayonnaise','mayo','salad dressing','tomato sauce','ketchup','heinz','bbq sauce','sweet chilli','ranch dressing','energy bar','protein bar','granola bar','nutri-grain','margarine','rama','flora','stork','processed cheese','kraft singles','scone','shop scone','croissant','danish','chelsea bun','cream puff','eclair','doughnut','donut','instant soup','cup a soup','royco','frozen meal'];
 const KP=['bread','brood','toast','rye bread','sourdough','whole wheat bread','brown bread','wholewheat','pita','naan','roti','tortilla','flatbread','chapati','pasta','spaghetti','macaroni','penne','fettuccine','lasagne','noodle','bacon','spek','ham','salami','wors','boerewors','droewors','biltong','sausage','chorizo','bratwurst','smoked salmon','smoked fish','tinned tuna','canned tuna','canned fish','tinned sardines','tinned','canned','jarred','pickled','preserved','pap','mieliepap','maize','mealie','sadza','ugali','fufu','bogobe','ting','samp','umngqusho','injera','umvubo','uphuthu','umfino','oats','oatmeal','muesli','vinegar','stock cube','bouillon','soy sauce','fish sauce','miso','tahini','hummus','pesto','tomato paste','cake','koek','muffin','biscuit','koekie','beskuit','rusks','braaibroodjie','vetkoek','pizza base','butter','botter','cream','room','oil','olive oil','wheat','koring','flour','meel','yoghurt','yogurt','kefir','cheese','kaas'];
 function kwm(t,l){if(!t)return false;const low=t.toLowerCase();return l.some(k=>low.includes(k));}
@@ -450,77 +454,65 @@ function clrLog(){SYMS.forEach(s=>{const e=$(s.id);if(e){e.value=0;uv(s.id+'v','
 
 /* ── MEAL ROWS ────────────────────────────────────────────────────────── */
 const MEALS=[{name:'Breakfast',icon:'ti-eggs',key:'b'},{name:'Lunch',icon:'ti-bowl-chopsticks',key:'l'},{name:'Dinner',icon:'ti-meat',key:'n'},{name:'Snacks',icon:'ti-apple',key:'s'}];
-function buildMealRows(){const el=$('mealrows');if(!el)return;el.innerHTML=MEALS.map(m=>`<div class="mblock"><div class="mname"><i class="ti ${m.icon}" aria-hidden="true"></i>${m.name}</div><div class="mrow"><input type="text" id="mf-${m.key}" placeholder="type foods eaten..." oninput="uf('${m.key}')"><div class="mflags"><span class="mfl mf-blank" id="fd-${m.key}">—</span><span class="mfl mf-blank" id="fs-${m.key}">—</span><span class="mfl mf-blank" id="fp-${m.key}">—</span><span class="mfl mf-blank" id="fl-${m.key}">—</span></div></div></div>`).join('');}
-function uf(key){const t=$('mf-'+key)?.value||'';const e=!t.trim();const d=kwm(t,KD),s=kwm(t,KS),l=procLevel(t);const set=(id,txt,cls)=>{const x=$(id);if(x){x.textContent=txt;x.className='mfl '+cls;}};set('fd-'+key,e?'—':d?'Dairy':'No dairy',e?'mf-blank':d?'mf-y':'mf-n');set('fs-'+key,e?'—':s?'Sugar':'No sugar',e?'mf-blank':s?'mf-y':'mf-n');set('fp-'+key,e?'—':l==='Ultra-processed'?'UP':l==='Processed'?'Proc':'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');set('fl-'+key,e?'—':l||'Clean',e?'mf-blank':l==='Ultra-processed'?'mf-up':l==='Processed'?'mf-p':'mf-c');}
+function buildMealRows(){
+  const el=$('mealrows');if(!el)return;
+  el.innerHTML=MEALS.map(m=>`<div class="mblock"><div class="mname"><i class="ti ${m.icon}" aria-hidden="true"></i>${m.name}</div><div class="mrow"><input type="text" id="mf-${m.key}" placeholder="type foods eaten..." oninput="uf('${m.key}')"><div class="mflags"><span class="mfl mf-blank" id="fd-${m.key}">—</span><span class="mfl mf-blank" id="fs-${m.key}">—</span><span class="mfl mf-blank" id="fg-${m.key}">—</span><span class="mfl mf-blank" id="fh-${m.key}">—</span><span class="mfl mf-blank" id="fp-${m.key}">—</span></div></div></div>`).join('');
+}
+function uf(key){
+  const t=$('mf-'+key)?.value||'', empty=!t.trim();
+  const dairy=kwm(t,KD), sugar=kwm(t,KS), gluten=kwm(t,KG), histamine=kwm(t,KH), level=procLevel(t);
+  const set=(id,txt,cls)=>{const x=$(id);if(x){x.textContent=txt;x.className='mfl '+cls;}};
+  set('fd-'+key,empty?'—':dairy?'Dairy':'No dairy',empty?'mf-blank':dairy?'mf-y':'mf-n');
+  set('fs-'+key,empty?'—':sugar?'Sugar':'No sugar',empty?'mf-blank':sugar?'mf-y':'mf-n');
+  set('fg-'+key,empty?'—':gluten?'Gluten':'Gluten-free',empty?'mf-blank':gluten?'mf-y':'mf-n');
+  set('fh-'+key,empty?'—':histamine?'Histamine*':'Low histamine*',empty?'mf-blank':histamine?'mf-y':'mf-n');
+  set('fp-'+key,empty?'—':level==='Ultra-processed'?'Ultra-processed':level==='Processed'?'Processed':'Clean',empty?'mf-blank':level==='Ultra-processed'?'mf-up':level==='Processed'?'mf-p':'mf-c');
+}
 
-/* ── AI CLASSIFIER — uses sendPrompt to go through Claude chat ─────────── */
+/* ── FOOD CLASSIFIER — local-first heuristic engine ─────────────────── */
 let lastFlags=null;
+function classifyFoodLocal(q){
+  const level=procLevel(q)||'Clean';
+  const dairy=kwm(q,KD), sugar=kwm(q,KS), gluten=kwm(q,KG), histamine=kwm(q,KH);
+  const alcohol=kwm(q,['wine','beer','alcohol','cider','whisky','vodka','gin','brandy','liqueur']);
+  const ultraProcessed=level==='Ultra-processed', processed=level==='Processed';
+  const score=Math.min(10,(dairy?1:0)+(sugar?1.5:0)+(gluten?1:0)+(histamine?1.5:0)+(processed?1:0)+(ultraProcessed?3:0)+(alcohol?2:0));
+  return {
+    summary:'Local classification based on the foods you entered.',dairy,sugar,gluten,histamine,alcohol,
+    ultraProcessed,processed,processingLevel:level,novaGroup:ultraProcessed?4:processed?3:1,
+    omega6:false,migraineRisk:false,sinusRisk:false,acneRisk:false,saFood:false,saFoodName:'',
+    processingNote:'This is a screening heuristic. Ingredients, preparation and individual response can change the result.',
+    concerns:histamine?'*Histamine classification is context-sensitive and depends on freshness, fermentation and individual tolerance.':'Use repeated symptom patterns—not one food alone—to investigate possible triggers.',
+    foodLoadScore:Math.round(score*10)/10
+  };
+}
 async function aiClass(){
-  const q=$('aiq')?.value?.trim();if(!q)return;
+  const q=$('aiq')?.value?.trim();if(!q){toast('Enter a food first',false);return;}
   const btn=$('aibtn'),think=$('aith'),res=$('airesult');
-  if(btn)btn.disabled=true;
-  if(think)think.innerHTML='<span class="spin"></span> Classifying your food...';
-  if(res){res.style.display='none';res.innerHTML='';}
-
-  const prompt=`FOOD_CLASSIFY_REQUEST: Classify this food for a wellness inflammation tracker. Food: "${q}". Recognise SA foods (pap, mieliepap, boerewors, biltong, vetkoek, chakalaka, umngqusho, samp, amasi, maas, koeksisters, melktert, rusks, vetkoek, braaibroodjie, magwinya, roosterkoek, umfino, morogo, mogodu, snoek, sosaties) and African foods (ugali, fufu, injera, sadza, jollof rice, suya, akara, egusi, umvubo, uphuthu, bogobe, ting, mopane worms). NOVA 4 (ultra-processed): soft drinks, crisps, chocolate bars, ice cream, fast food, instant noodles, commercial pastries/scones, ketchup, mayo, polony, vienna. NOVA 3 (processed): bread, cheese, yoghurt, boerewors, biltong, pap, canned goods. Reply with ONLY valid JSON, nothing else: {"summary":"one sentence","dairy":true/false,"dairyFoods":"list","sugar":true/false,"sugarFoods":"list","histamine":true/false,"histamineFoods":"list","gluten":true/false,"glutenFoods":"list","ultraProcessed":true/false,"processed":true/false,"processingLevel":"Clean or Processed or Ultra-processed","omega6":true/false,"alcohol":true/false,"migraineRisk":true/false,"sinusRisk":true/false,"acneRisk":true/false,"saFood":true/false,"saFoodName":"name or empty string","novaGroup":1,"processingNote":"one sentence","concerns":"one sentence","foodLoadScore":5}`;
-
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',content:prompt}]})
-    });
-    if(!r.ok){
-      const err=await r.json().catch(()=>({}));
-      throw new Error(err.error?.message||'API error '+r.status);
-    }
-    const data=await r.json();
-    const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const f=JSON.parse(raw);
-    lastFlags=f;
-    if(think)think.innerHTML='';
-    if(res){
-      res.style.display='block';
-      const lc=f.foodLoadScore>=7?'#B71C1C':f.foodLoadScore>=4?'#BF360C':'#1B5E20';
-      const lb=f.foodLoadScore>=7?'#FFCDD2':f.foodLoadScore>=4?'#FFE0B2':'#C8E6C9';
-      res.innerHTML=`<div style="font-size:12px;font-weight:500;margin-bottom:8px">${f.summary}${f.saFood&&f.saFoodName?` <span class="tag ta"><i class="ti ti-map-pin"></i>${f.saFoodName}</span>`:''}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:9px">
-          ${f.dairy?`<span class="tag ty">Dairy${f.dairyFoods?': '+f.dairyFoods:''}</span>`:'<span class="tag tn">No dairy</span>'}
-          ${f.histamine?`<span class="tag ty">Histamine${f.histamineFoods?': '+f.histamineFoods:''}</span>`:'<span class="tag tn">Low histamine</span>'}
-          ${f.sugar?`<span class="tag tw">Sugar${f.sugarFoods?': '+f.sugarFoods:''}</span>`:'<span class="tag tn">Low sugar</span>'}
-          ${f.gluten?`<span class="tag tw">Gluten${f.glutenFoods?': '+f.glutenFoods:''}</span>`:'<span class="tag tn">Gluten-free</span>'}
-          <span class="tag ${f.ultraProcessed?'ty':f.processed?'tw':'tn'}">${f.processingLevel}</span>
-          ${f.omega6?'<span class="tag tw">High omega-6</span>':''}
-          ${f.alcohol?'<span class="tag ty">Alcohol</span>':''}
-          ${f.migraineRisk?'<span class="tag tp">Migraine risk</span>':''}
-          ${f.sinusRisk?'<span class="tag ta">Sinus risk</span>':''}
-          ${f.acneRisk?'<span class="tag ty">Acne risk</span>':''}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-          <span style="background:${lb};color:${lc};padding:3px 12px;border-radius:20px;font-size:11px;font-weight:500">Food load: ${f.foodLoadScore}/10</span>
-          <span style="font-size:10px;color:var(--text-secondary)">NOVA ${f.novaGroup} · ${f.processingLevel}</span>
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-style:italic">${f.processingNote||''}</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:9px">${f.concerns||''}</div>
-        <button class="btn plum-btn" onclick="applyAi()" style="font-size:11px;padding:6px 12px"><i class="ti ti-file-import"></i>Apply to food log</button>`;
-    }
-  }catch(err){
-    if(think)think.innerHTML='';
-    if(res){
-      res.style.display='block';
-      res.innerHTML=`<div style="font-size:11px;color:#B71C1C;margin-bottom:6px">AI classifier needs the Claude API — using local classification instead.</div>
-        <div id="local-result"></div>`;
-      const all=q;
-      const lvl=procLevel(all);
-      const d=kwm(all,KD),s=kwm(all,KS);
-      const lf=$('local-result');
-      if(lf)lf.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:3px">
-        ${d?'<span class="tag ty">Dairy detected</span>':'<span class="tag tn">No dairy</span>'}
-        ${s?'<span class="tag ty">Sugar detected</span>':'<span class="tag tn">Low sugar</span>'}
-        <span class="tag ${lvl==='Ultra-processed'?'ty':lvl==='Processed'?'tw':'tn'}">${lvl}</span>
-        </div><div style="font-size:11px;color:var(--text-muted);margin-top:6px">For full AI analysis, use the desktop Claude app.</div>`;
-    }
-    console.error('AI classify error:',err);
+  if(btn)btn.disabled=true;if(think)think.innerHTML='<span class="spin"></span> Classifying food...';
+  await new Promise(resolve=>setTimeout(resolve,120));
+  const f=classifyFoodLocal(q);lastFlags=f;
+  if(think)think.innerHTML='';
+  if(res){
+    res.style.display='block';
+    const lc=f.foodLoadScore>=7?'#B71C1C':f.foodLoadScore>=4?'#BF360C':'#1B5E20';
+    const lb=f.foodLoadScore>=7?'#FFCDD2':f.foodLoadScore>=4?'#FFE0B2':'#C8E6C9';
+    res.innerHTML=`<div style="font-size:12px;font-weight:500;margin-bottom:8px">${f.summary}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:9px">
+        <span class="tag ${f.dairy?'ty':'tn'}">${f.dairy?'Dairy':'No dairy'}</span>
+        <span class="tag ${f.sugar?'tw':'tn'}">${f.sugar?'Sugar':'Low sugar'}</span>
+        <span class="tag ${f.gluten?'tw':'tn'}">${f.gluten?'Gluten':'Gluten-free'}</span>
+        <span class="tag ${f.histamine?'ty':'tn'}">${f.histamine?'Histamine*':'Low histamine*'}</span>
+        <span class="tag ${f.ultraProcessed?'ty':f.processed?'tw':'tn'}">${f.processingLevel}</span>
+        ${f.alcohol?'<span class="tag ty">Alcohol</span>':''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="background:${lb};color:${lc};padding:3px 12px;border-radius:20px;font-size:11px;font-weight:500">Screening load: ${f.foodLoadScore}/10</span>
+        <span style="font-size:10px;color:var(--text-secondary)">NOVA ${f.novaGroup} · ${f.processingLevel}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-style:italic">${f.processingNote}</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:9px">${f.concerns}</div>
+      <button class="btn plum-btn" onclick="applyAi()" style="font-size:11px;padding:6px 12px"><i class="ti ti-file-import"></i>Apply to food log</button>`;
   }
   if(btn)btn.disabled=false;
 }
@@ -534,7 +526,7 @@ async function applyAi(){
 function readFood(){return{date:recordDate,bFood:$('mf-b')?.value||'',lFood:$('mf-l')?.value||'',dFood:$('mf-n')?.value||'',sFood:$('mf-s')?.value||'',restaurant:$('exr')?.value||'N',leftovers:$('exl')?.value||'N',newFood:$('exn')?.value||'N',desc:$('exd')?.value||''};}
 async function saveFood(){
   const f=readFood();if(!f.date){toast('Select a date first',false);return;}
-  if(!f.flags){const all=[f.bFood,f.lFood,f.dFood,f.sFood,f.desc].join(' ');const lvl=procLevel(all);f.flags={dairy:kwm(all,KD),sugar:kwm(all,KS),ultraProcessed:lvl==='Ultra-processed',processed:lvl==='Processed',histamine:false,alcohol:false,restaurant:f.restaurant==='Y',omega6:false,migraineRisk:false,sinusRisk:false,acneRisk:false,gluten:false};f.foodLoad=0;}
+  if(!f.flags){const all=[f.bFood,f.lFood,f.dFood,f.sFood,f.desc].join(' ');const lvl=procLevel(all);f.flags={dairy:kwm(all,KD),sugar:kwm(all,KS),ultraProcessed:lvl==='Ultra-processed',processed:lvl==='Processed',histamine:kwm(all,KH),alcohol:kwm(all,['wine','beer','alcohol','cider','whisky','vodka','gin','brandy']),restaurant:f.restaurant==='Y',omega6:false,migraineRisk:false,sinusRisk:false,acneRisk:false,gluten:kwm(all,KG)};f.foodLoad=0;}
   const i=S.foods.findIndex(x=>x.date===f.date);if(i>=0)S.foods[i]=f;else S.foods.push(f);
   await persist();toast('Food log saved!');render();
 }
@@ -787,4 +779,29 @@ buildSliders();buildMealRows();
 })();
 document.querySelectorAll('#v-log input,#v-log select').forEach(e=>{e.addEventListener('input',ll);e.addEventListener('change',ll);});
 </script>
-<script>if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));</script></body></html>
+<script>
+/* ── PWA UPDATE + CONNECTIVITY CONTROL ─────────────────────────────── */
+if('serviceWorker' in navigator){
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;window.location.reload();}});
+  window.addEventListener('load',async()=>{
+    try{
+      const reg=await navigator.serviceWorker.register('./sw.js');
+      const activate=worker=>{if(worker)worker.postMessage({type:'SKIP_WAITING'});};
+      if(reg.waiting){setbar('A new version is ready — updating…','update');activate(reg.waiting);}
+      reg.addEventListener('updatefound',()=>{
+        const worker=reg.installing;if(!worker)return;
+        worker.addEventListener('statechange',()=>{
+          if(worker.state==='installed'&&navigator.serviceWorker.controller){setbar('A new version is ready — updating…','update');activate(worker);}
+        });
+      });
+      setInterval(()=>reg.update().catch(()=>{}),30*60*1000);
+    }catch(err){console.error('Service worker registration failed:',err);}
+  });
+}
+function updateConnectivity(){
+  if(!navigator.onLine){setbar('Offline mode — your data remains available on this device','offline');}
+  else if(stMode){setbar(`✓ ${stMode==='indexeddb'?'Saved on this device':'Browser storage active'} · ${S.days.length} day${S.days.length===1?'':'s'} logged`,'ok');}
+}
+window.addEventListener('online',updateConnectivity);window.addEventListener('offline',updateConnectivity);
+</script></body></html>
