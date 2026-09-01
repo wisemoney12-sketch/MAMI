@@ -135,7 +135,7 @@ body{background:radial-gradient(circle at top right,#F4EAF1 0,transparent 30%),v
     <div class="bmark"><i class="ti ti-heart-rate-monitor" aria-hidden="true"></i></div>
     <div><div class="bname">MAMI</div><div class="bsub">Physiological diagnostic system</div></div>
   </div>
-  <div class="spill"><i class="ti ti-flame" aria-hidden="true"></i><span id="snum">0</span> day streak</div>
+  <div class="spill"><i class="ti ti-flame" aria-hidden="true"></i><span id="snum">0</span>-day log streak</div>
 </div>
 
 <nav class="nav">
@@ -162,7 +162,7 @@ body{background:radial-gradient(circle at top right,#F4EAF1 0,transparent 30%),v
 <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px">MAMI records are stored locally on this device. They are not synced to another device yet.</div>
 <div class="brow" style="margin-top:0"><button class="btn" onclick="exportData()"><i class="ti ti-download"></i>Export backup</button>
 <button class="btn" onclick="importData()"><i class="ti ti-upload"></i>Import backup</button>
-<button class="btn" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i>Export Excel</button></div></div>
+<button class="btn" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i>Export Excel</button><button class="btn" onclick="loadDemoDataset()"><i class="ti ti-flask"></i>Load 14-day test data</button></div></div>
 </div>
 
 <!-- LOG DAY -->
@@ -331,22 +331,71 @@ async function migrateLegacy(){
   }
   return null;
 }
+function seedDemoData(){
+  // Deterministic synthetic data for engine testing. It intentionally contains repeated
+  // patterns so the trigger/correlation logic has something meaningful to detect.
+  const end=today();
+  const dates=Array.from({length:14},(_,i)=>addDays(end,i-13));
+  const profile=[
+    {kind:'low',b:'Eggs, avocado, tomato',l:'Grilled chicken, spinach, brown rice',d:'Fresh hake, broccoli, sweet potato',s:'Apple, pumpkin seeds'},
+    {kind:'flare',b:'Bacon, cheddar cheese, toast',l:'Pizza, coke',d:'Boerewors, pap',s:'Chocolate bar'},
+    {kind:'low',b:'Oats, banana, pumpkin seeds',l:'Chicken salad, olive oil',d:'Beef, vegetables, sweet potato',s:'Pear, nuts'},
+    {kind:'mid',b:'Amasi, muesli, honey',l:'Chicken wrap',d:'Samp, beans, spinach',s:'Yoghurt'},
+    {kind:'flare',b:'Cheddar toast, bacon',l:'Burger and chips, coke',d:'Pasta with cheese',s:'Ice cream'},
+    {kind:'low',b:'Eggs, spinach, avocado',l:'Fresh chicken, quinoa, broccoli',d:'Fresh fish, vegetables',s:'Orange, pumpkin seeds'},
+    {kind:'mid',b:'Oats, yoghurt, banana',l:'Tuna sandwich',d:'Chicken, rice, vegetables',s:'Dark chocolate'},
+    {kind:'flare',b:'Sausage, toast, cheese',l:'Fried chicken and chips',d:'Pizza',s:'Cooldrink, sweets'},
+    {kind:'low',b:'Eggs, banana',l:'Grilled chicken salad',d:'Beef stew, vegetables',s:'Apple, nuts'},
+    {kind:'mid',b:'Pap, eggs',l:'Boerewors roll',d:'Chicken curry, rice',s:'Yoghurt'},
+    {kind:'flare',b:'Bacon, cheese, toast',l:'KFC, coke',d:'Tinned tuna pasta',s:'Chocolate, ice cream'},
+    {kind:'low',b:'Oats, banana, seeds',l:'Fresh fish, salad',d:'Chicken, sweet potato, broccoli',s:'Pear'},
+    {kind:'low',b:'Eggs, avocado',l:'Beef salad, vegetables',d:'Fresh hake, spinach, rice',s:'Apple, pumpkin seeds'},
+    {kind:'low',b:'Eggs, spinach',l:'Grilled chicken, broccoli',d:'Fresh fish, vegetables, sweet potato',s:'Banana, nuts'}
+  ];
+  const dayByKind={
+    low:{acne:1,sinus:1,migraine:0,energy:8,stress:2,sleepHours:8,sleepQual:8,wakeConsist:'Y',nightAwake:0,exercise:'Resistance',steps:'8000',sitting:'N'},
+    mid:{acne:3,sinus:3,migraine:1,energy:6,stress:5,sleepHours:6.5,sleepQual:6,wakeConsist:'N',nightAwake:1,exercise:'Light',steps:'5000',sitting:'Y'},
+    flare:{acne:6,sinus:7,migraine:5,energy:3,stress:7,sleepHours:5.5,sleepQual:4,wakeConsist:'N',nightAwake:2,exercise:'None',steps:'2500',sitting:'Y'}
+  };
+  const days=[],foods=[];
+  dates.forEach((date,i)=>{
+    const p=profile[i],d={date,...dayByKind[p.kind],notes:`Synthetic ${p.kind} test day ${i+1}`};
+    d.load=calcLoad(d);days.push(d);
+    foods.push({date,bFood:p.b,lFood:p.l,dFood:p.d,sFood:p.s,restaurant:p.kind==='flare'?'Yes':'No',leftovers:'No',newFood:'No',desc:'Synthetic engine test data',foodLoad:p.kind==='flare'?8:p.kind==='mid'?5:2});
+  });
+  return {days,foods,timing:[],weekly:{},demoData:true};
+}
+
+async function loadDemoDataset(){
+  if(!confirm('Load the 14-day synthetic test dataset? This will replace the current data on this device. Export a backup first if you want to keep it.'))return;
+  S=seedDemoData();
+  await persist();
+  recordDate=today();
+  syncDateDisplays();
+  loadFormsForDate(recordDate);
+  $('snum').textContent=loggingStreak();
+  render();
+  toast('14 synthetic test days loaded ✓');
+}
+
 async function loadState(){
   try{
     let raw=await idbGet();
     if(!raw)raw=await migrateLegacy();
     if(raw)S=normaliseState(JSON.parse(raw));
+    if(!S.days.length&&!S.foods.length){S=seedDemoData();await idbSet(S);}
     stMode='indexeddb';
-    setbar(`✓ Data stored on this device · ${S.days.length} day${S.days.length===1?'':'s'} logged`,'ok');
+    setbar(`${S.demoData?'⚗ 14 synthetic test days loaded · ':''}✓ Data stored on this device · ${S.days.length} day${S.days.length===1?'':'s'} logged`,'ok');
   }catch(e){
     console.error('Local database unavailable:',e);
     stMode='localstorage-fallback';
     try{
       const raw=localStorage.getItem(SK); if(raw)S=normaliseState(JSON.parse(raw));
+      if(!S.days.length&&!S.foods.length){S=seedDemoData();localStorage.setItem(SK,JSON.stringify(S));}
       setbar(`⚠ Browser storage fallback · ${S.days.length} day${S.days.length===1?'':'s'} logged`,'err');
     }catch(e2){setbar('Storage unavailable — data cannot be safely persisted','err');}
   }
-  $('snum').textContent=streak(); render();
+  $('snum').textContent=loggingStreak(); render();
 }
 async function persist(){
   try{
@@ -376,7 +425,7 @@ function importData(){
       if(payload?.app!=='MAMI'||payload?.schemaVersion!==1||!incoming||!Array.isArray(incoming.days)||!Array.isArray(incoming.foods)||!Array.isArray(incoming.timing)||typeof incoming.weekly!=='object')throw new Error('Invalid backup');
       if(!confirm('Import this backup? Existing data on this device will be replaced by the backup.'))return;
       S=normaliseState(incoming);
-      if(await persist()){render();$('snum').textContent=streak();toast('Backup restored ✓');}
+      if(await persist()){render();$('snum').textContent=loggingStreak();toast('Backup restored ✓');}
     }catch(e){console.error('Import failed:',e);toast('Invalid or unreadable backup file',false);}
   };
   input.click();
@@ -436,12 +485,22 @@ function calcLoad(d){
   const eb=d.exercise==='None'?1:d.exercise==='Resistance'?-1:d.exercise==='Intense'?-1.5:0;
   return Math.max(0,Math.min(10,parseFloat(((a+si+m*1.5+(10-e)*.5+st+sp+qp+wp+awp+eb+(d.sitting==='Y'?1:0))/3.5).toFixed(1))));
 }
-function streak(){
-  if(!S.days.length)return 0;
-  const sorted=[...S.days].sort((a,b)=>b.date.localeCompare(a.date));
-  const now=new Date();now.setHours(0,0,0,0);let k=0;
-  for(const d of sorted){if(Math.round((now-new Date(d.date+'T00:00:00'))/864e5)===k)k++;else break;}
+function dayDiff(a,b){return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/864e5);}
+function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function loggingStreak(){
+  const dates=new Set(S.days.map(d=>d.date).filter(Boolean));
+  let cursor=today(),k=0;
+  while(dates.has(cursor)){k++;cursor=addDays(cursor,-1);}
   return k;
+}
+function bestLowLoadStreak(days){
+  const low=[...new Set(days.filter(d=>d.load!=null&&d.load<=3).map(d=>d.date))].sort();
+  let best=0,run=0,prev=null;
+  for(const date of low){
+    if(prev&&dayDiff(date,prev)===1)run++;else run=1;
+    best=Math.max(best,run);prev=date;
+  }
+  return best;
 }
 
 /* ── SLIDERS ──────────────────────────────────────────────────────────── */
@@ -449,7 +508,7 @@ const SYMS=[{id:'sa',lbl:'Acne severity',key:'acne'},{id:'ss',lbl:'Sinus irritat
 function buildSliders(){const el=$('symsl');if(!el)return;el.innerHTML=SYMS.map(s=>`<div class="sr"><label>${s.lbl}</label><input type="range" id="${s.id}" min="0" max="10" step="1" value="0" oninput="uv('${s.id}v',this.value,sc(this.value));ll()"><span class="sv lo" id="${s.id}v">0</span></div>`).join('');}
 function ll(){const d=readLog();const v=calcLoad(d);const b=$('lbadge');if(!b)return;if(v===null){b.textContent='—';b.className='lsb ls-lo';return;}b.textContent=v.toFixed(1)+' / 10';b.className='lsb '+(v>=7?'ls-hi':v>=4?'ls-mi':'ls-lo');}
 function readLog(){const d={};SYMS.forEach(s=>{const e=$(s.id);d[s.key]=e?parseFloat(e.value)||0:0;});d.sleepHours=parseFloat($('slh')?.value)||0;d.sleepQual=parseFloat($('slq')?.value)||0;d.wakeConsist=$('slw')?.value||'';d.nightAwake=parseFloat($('sla')?.value)||0;d.exercise=$('aex')?.value||'';d.steps=$('ast')?.value||'';d.sitting=$('asi')?.value||'';d.date=recordDate;d.notes=$('ln')?.value||'';return d;}
-async function saveLog(){const d=readLog();if(!d.date){toast('Select a date first',false);return;}d.load=calcLoad(d);const i=S.days.findIndex(x=>x.date===d.date);if(i>=0)S.days[i]=d;else S.days.push(d);S.days.sort((a,b)=>a.date.localeCompare(b.date));await persist();const k=streak();$('snum').textContent=k;toast(k>1?`Day ${k} — streak alive! 🔥`:d.load!==null&&d.load<=3?'Clean day logged ✓':'Day saved!');render();}
+async function saveLog(){const d=readLog();if(!d.date){toast('Select a date first',false);return;}d.load=calcLoad(d);const i=S.days.findIndex(x=>x.date===d.date);if(i>=0)S.days[i]=d;else S.days.push(d);S.days.sort((a,b)=>a.date.localeCompare(b.date));await persist();const k=loggingStreak();$('snum').textContent=k;toast(k>1?`${k}-day logging streak alive! 🔥`:d.load!==null&&d.load<=3?'Low-load day logged ✓':'Day saved!');render();}
 function clrLog(){SYMS.forEach(s=>{const e=$(s.id);if(e){e.value=0;uv(s.id+'v','0','lo');}});if($('slh')){$('slh').value=7;uv('slhv','7h','lo');}if($('slq')){$('slq').value=7;uv('slqv','7','lo');}['slw','aex','ast','asi'].forEach(id=>{const e=$(id);if(e)e.value='';});['sla','ln'].forEach(id=>{const e=$(id);if(e)e.value='';});ll();}
 
 /* ── MEAL ROWS ────────────────────────────────────────────────────────── */
@@ -674,12 +733,12 @@ function analyseWeek(weekStart){
   const foodByDate={};foods.forEach(f=>foodByDate[f.date]=f);
 
   const flareDays=days.filter(d=>d.load!=null&&d.load>=6);
-  const cleanDays=days.filter(d=>d.load!=null&&d.load<=3);
+  const lowLoadDays=days.filter(d=>d.load!=null&&d.load<=3);
   const flareFoods=flareDays.map(d=>foodByDate[d.date]).filter(Boolean);
-  const cleanFoodsArr=cleanDays.map(d=>foodByDate[d.date]).filter(Boolean);
+  const lowLoadFoodsArr=lowLoadDays.map(d=>foodByDate[d.date]).filter(Boolean);
   const commonFoods=topFoodTokens(foods,5);
   const flareFoodTokens=topFoodTokens(flareFoods,5);
-  const cleanTokenSet=new Set(topFoodTokens(cleanFoodsArr,30).map(t=>t.replace(/\s*\(\d+×\)$/,'')));
+  const cleanTokenSet=new Set(topFoodTokens(lowLoadFoodsArr,30).map(t=>t.replace(/\s*\(\d+×\)$/,'')));
   const flareOnlyTokens=[...new Set(flareFoods.flatMap(dayFoodTokens))].filter(t=>!cleanTokenSet.has(t)).slice(0,5);
 
   const MIN_TRIGGER_DAYS=3;
@@ -712,7 +771,7 @@ function analyseWeek(weekStart){
   const worst=symptoms.sort((a,b)=>b.avg-a.avg)[0];
   const worstLine=worst?`${worst.l} (avg ${fmt1(worst.avg)}/10)`:'—';
   const multiDays=days.filter(d=>[d.acne,d.sinus,d.migraine].filter(v=>(v||0)>4).length>=2).length;
-  let streak2=0,best=0;days.forEach(d=>{if(d.load!=null&&d.load<=3){streak2++;best=Math.max(best,streak2);}else streak2=0;});
+  const best=bestLowLoadStreak(days);
   const pairs=[];
   if(days.filter(d=>(d.acne||0)>4&&(d.sinus||0)>4).length)pairs.push('acne+sinus');
   if(days.filter(d=>(d.acne||0)>4&&(d.migraine||0)>4).length)pairs.push('acne+migraine');
@@ -728,7 +787,7 @@ function analyseWeek(weekStart){
   const confLine=`${confidence}/10 — ${loggedN} day${loggedN===1?'':'s'} logged this week`;
 
   return{weekStart,label:weekLabel(weekStart),days,
-    food:{common:commonFoods,flareFoods:flareFoodTokens,cleanFoods:[...cleanTokenSet].slice(0,5),flareOnly:flareOnlyTokens},
+    food:{common:commonFoods,flareFoods:flareFoodTokens,lowLoadFoods:[...cleanTokenSet].slice(0,5),flareOnly:flareOnlyTokens},
     triggers:triggerLines,sleep:sleepLine,stress:stressLine,hormones:'Not tracked in this build — no cycle data logged',
     symptom:{worst:worstLine,multiDays,streak:best,corr:corrLine},
     resolve:{eliminate:eliminateLine,behaviour:behaviourLine,confidence:confLine}};
@@ -743,14 +802,14 @@ function rWeekly(){
   const a=analyses[wkSel];
   const pills=analyses.map((_,i)=>`<button class="wk-pill${i===wkSel?' on':''}" onclick="wkSelect(${i})">Week ${i+1}</button>`).join('');
   const row=(label,content)=>`<div class="wk-srow"><div class="wk-slabel">${label}</div><div class="wk-sval">${content}</div></div>`;
-  el.innerHTML=`<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px">Auto-generated from your logged days and food — correlations to investigate, not a diagnosis. Discuss persistent patterns with a healthcare provider.</div>`
+  el.innerHTML=`<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px">${S.demoData?'⚗ Synthetic test dataset: patterns are intentionally repeated to test the engine.<br>':''}Auto-generated from your logged days and food — correlations to investigate, not a diagnosis. Discuss persistent patterns with a healthcare provider.</div>`
     +`<div class="wk-pills">${pills}</div>`
     +`<div class="wk-single">`
     +`<div class="wk-shead"><div class="wk-sweek">Week ${wkSel+1}</div><div class="wk-ssub">${a.label}</div></div>`
     +row('Most common foods',a.food.common.length?a.food.common.join(', '):'—')
     +row('Flare-day foods',a.food.flareFoods.length?a.food.flareFoods.join(', '):'No flare days')
-    +row('Clean-day foods',a.food.cleanFoods.length?a.food.cleanFoods.join(', '):'No clean days')
-    +row('Foods absent on clean days',a.food.flareOnly.length?a.food.flareOnly.join(', '):'—')
+    +row('Foods on low-load days',a.food.lowLoadFoods.length?a.food.lowLoadFoods.join(', '):'No low-load days')
+    +row('Foods absent on low-load days',a.food.flareOnly.length?a.food.flareOnly.join(', '):'—')
     +row('Trigger #1',a.triggers[0])
     +row('Trigger #2',a.triggers[1])
     +row('Trigger #3',a.triggers[2])
@@ -759,7 +818,7 @@ function rWeekly(){
     +row('Hormonal phase',a.hormones)
     +row('Worst symptom',a.symptom.worst)
     +row('Multi-symptom days',a.symptom.multiDays)
-    +row('Symptom-free streak',`${a.symptom.streak} day${a.symptom.streak===1?'':'s'}`)
+    +row('Best low-load streak',`${a.symptom.streak} day${a.symptom.streak===1?'':'s'} (consecutive calendar days)`)
     +row('Correlation',a.symptom.corr)
     +row('Food to eliminate',a.resolve.eliminate)
     +row('Behaviour to test',a.resolve.behaviour)
